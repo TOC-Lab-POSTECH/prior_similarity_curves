@@ -4,7 +4,10 @@
 #include <fstream>
 #include <limits>
 
-#include "dummy.h"
+#include "critical_value.h"
+#include "decision_problem.h"
+#include "free_space.h"
+#include "polygonal_curve.h"
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
 typedef Kernel::FT FT;
@@ -13,60 +16,59 @@ typedef Kernel::Vector_3 Vector;
 
 typedef CGAL::Point_set_3<Point> Point_set;
 
-void print_point_set (const Point_set& point_set)
-{
-    std::cerr << "Content of point set:" << std::endl;
-    for (Point_set::const_iterator it = point_set.begin();
-         it != point_set.end(); ++ it)
-        std::cerr << "* Point " << *it
-                  << ": " << point_set.point(*it) // or point_set[it]
-                  << " with normal " << point_set.normal(*it)
-                  << std::endl;
+void print_point_set(const Point_set& point_set) {
+  std::cerr << "Content of point set:" << std::endl;
+  for (Point_set::const_iterator it = point_set.begin(); it != point_set.end();
+       ++it)
+    std::cerr << "* Point " << *it << ": "
+              << point_set.point(*it)  // or point_set[it]
+              << " with normal " << point_set.normal(*it) << std::endl;
 }
 
-int main (int, char**)
-{
-    Point_set point_set;
+int main(int, char**) {
+  // Define points for Polygonal Curve P
+  std::vector<Point_2> pointsP = {Point_2(0, 0), Point_2(1, 1), Point_2(2, 2),
+                                  Point_2(3, 3)};
+  PolygonalCurve P(pointsP);
 
-    // Add points
-    point_set.insert (Point (0., 0., 0.));
-    point_set.insert (Point (0., 0., 1.));
-    point_set.insert (Point (0., 1., 0.));
+  // Define points for Polygonal Curve Q
+  std::vector<Point_2> pointsQ = {Point_2(1, -1), Point_2(2, 0), Point_2(3, 1),
+                                  Point_2(4, 2)};
+  PolygonalCurve Q(pointsQ);
 
-    point_set.add_normal_map();
+  // Set the epsilon value
+  double epsilon = 1.5;
 
-    print_point_set(point_set); // Normals have default values
+  // Create a DecisionProblem object
+  DecisionProblem decisionProblem(P, Q, epsilon);
 
-    // Change normal values
-    Point_set::iterator it = point_set.begin();
-    point_set.normal(*(it++)) = Vector (1., 0., 0.);
-    point_set.normal(*(it++)) = Vector (0., 1., 0.);
-    point_set.normal(*(it++)) = Vector (0., 0., 1.);
+  // Check if a monotone curve exists
+  bool result = decisionProblem.doesMonotoneCurveExist();
 
-    // Add point + normal
-    point_set.insert (Point (1., 2., 3.), Vector (4., 5., 6.));
+  // Output the result
+  if (result) {
+    std::cout
+        << "A monotone curve exists between the polygonal curves with epsilon "
+        << epsilon << "." << std::endl;
+  } else {
+    std::cout
+        << "No monotone curve exists between the polygonal curves with epsilon "
+        << epsilon << "." << std::endl;
+  }
 
-    print_point_set(point_set);
+  // Test updating epsilon and rechecking
+  double newEpsilon = 1.4;
+  decisionProblem.setEpsilon(newEpsilon);
+  result = decisionProblem.doesMonotoneCurveExist();
 
-    // Add new item
-    Point_set::iterator new_item = point_set.insert(Point (7., 8., 9.));
-    point_set.normal(*new_item) = Vector (10., 11., 12.);
+  // Output the new result
+  if (result) {
+    std::cout << "With updated epsilon " << newEpsilon
+              << ", a monotone curve exists." << std::endl;
+  } else {
+    std::cout << "With updated epsilon " << newEpsilon
+              << ", no monotone curve exists." << std::endl;
+  }
 
-    print_point_set(point_set); // New item has default values
-
-    point_set.remove (point_set.begin() + 2,
-                      point_set.begin() + 4);
-
-    print_point_set(point_set); // New item has default values
-
-    // Display information
-    std::cerr << "Number of removed points: " <<point_set.number_of_removed_points() << std::endl;
-
-    point_set.collect_garbage();
-
-    // Display information (garbage should be gone)
-    std::cerr << "After garbage collection: " <<point_set.number_of_removed_points() << std::endl;
-
-    Dummy::test();
-    return 0;
+  return 0;
 }
