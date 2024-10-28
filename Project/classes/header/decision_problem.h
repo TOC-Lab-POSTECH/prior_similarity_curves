@@ -25,15 +25,14 @@ class DecisionProblem {
   PolygonalCurve Q;     // Polygonal curve Q
   double epsilon;       // Epsilon value
   FreeSpace freeSpace;  // FreeSpace object
+  PointPairVector L_R;  // Reachable L
+  PointPairVector B_R;  // Reachable B
 
   bool monotoneCurveExists;  // True if a monotone curve exists, false otherwise
 
   // Helper functions for checking the conditions
   bool checkStartAndEndConditions();
   bool checkIfMonotoneCurveExists();
-
-  // Recursive helper function to determine monotone curve existence
-  bool recursiveCheck(const Point_2& currentPoint, bool isFromL);
 };
 
 #endif  // DECISION_PROBLEM_H

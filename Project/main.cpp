@@ -6,6 +6,7 @@
 
 #include "critical_value.h"
 #include "decision_problem.h"
+#include "fdistance.h"
 #include "free_space.h"
 #include "polygonal_curve.h"
 
@@ -25,50 +26,69 @@ void print_point_set(const Point_set& point_set) {
               << " with normal " << point_set.normal(*it) << std::endl;
 }
 
-int main(int, char**) {
-  // Define points for Polygonal Curve P
-  std::vector<Point_2> pointsP = {Point_2(0, 0), Point_2(1, 1), Point_2(2, 2),
-                                  Point_2(3, 3)};
+void testFDistance(const std::vector<Point_2>& pointsP,
+                   const std::vector<Point_2>& pointsQ) {
+  // Create polygonal curves P and Q using the provided points
   PolygonalCurve P(pointsP);
-
-  // Define points for Polygonal Curve Q
-  std::vector<Point_2> pointsQ = {Point_2(1, -1), Point_2(2, 0), Point_2(3, 1),
-                                  Point_2(4, 2)};
   PolygonalCurve Q(pointsQ);
 
-  // Set the epsilon value
-  double epsilon = 1.5;
+  // Create the FDistance object to compute the Fréchet distance
+  FDistance fDistance(P, Q);
 
-  // Create a DecisionProblem object
-  DecisionProblem decisionProblem(P, Q, epsilon);
-
-  // Check if a monotone curve exists
-  bool result = decisionProblem.doesMonotoneCurveExist();
-
-  // Output the result
-  if (result) {
-    std::cout
-        << "A monotone curve exists between the polygonal curves with epsilon "
-        << epsilon << "." << std::endl;
+  // Output the computed F-distance
+  double result = fDistance.getFDistance();
+  if (result != -1.0) {
+    std::cout << "Computed Fréchet Distance: " << result << std::endl;
   } else {
-    std::cout
-        << "No monotone curve exists between the polygonal curves with epsilon "
-        << epsilon << "." << std::endl;
+    std::cout << "No valid Fréchet distance found (f-distance = -1)."
+              << std::endl;
   }
+}
 
-  // Test updating epsilon and rechecking
-  double newEpsilon = 1.4;
-  decisionProblem.setEpsilon(newEpsilon);
-  result = decisionProblem.doesMonotoneCurveExist();
+int main(int, char**) {
+  // Define multiple sets of points for testing
 
-  // Output the new result
-  if (result) {
-    std::cout << "With updated epsilon " << newEpsilon
-              << ", a monotone curve exists." << std::endl;
-  } else {
-    std::cout << "With updated epsilon " << newEpsilon
-              << ", no monotone curve exists." << std::endl;
-  }
+  // Test Case 1: Simple linear curves
+  std::vector<Point_2> pointsP1 = {Point_2(0.0, 0.0), Point_2(3.0, 3.0)};
+  std::vector<Point_2> pointsQ1 = {Point_2(1.0, 0.0), Point_2(3.0, 2.0)};
+
+  // Test Case 2: Curves with more complex paths
+  std::vector<Point_2> pointsP2 = {Point_2(0.0, 0.0), Point_2(2.0, 1.0),
+                                   Point_2(4.0, 2.0), Point_2(6.0, 1.0)};
+  std::vector<Point_2> pointsQ2 = {Point_2(0.0, 1.0), Point_2(2.0, 3.0),
+                                   Point_2(4.0, 2.0), Point_2(6.0, 0.0)};
+
+  // Test Case 3: Horizontal and vertical lines
+  std::vector<Point_2> pointsP3 = {Point_2(0.0, 0.0), Point_2(5.0, 0.0)};
+  std::vector<Point_2> pointsQ3 = {Point_2(0.0, 1.0), Point_2(0.0, -2.0)};
+
+  // Test Case 4: Zigzag patterns
+  std::vector<Point_2> pointsP4 = {Point_2(0.0, 0.0), Point_2(1.0, 2.0),
+                                   Point_2(2.0, 0.0), Point_2(3.0, 2.0)};
+  std::vector<Point_2> pointsQ4 = {Point_2(0.0, 1.0), Point_2(1.0, -1.0),
+                                   Point_2(2.0, 1.0), Point_2(3.0, -1.0)};
+
+  // Test Case 5: Two identical curves
+  std::vector<Point_2> pointsP5 = {Point_2(0.0, 0.0), Point_2(1.0, 1.0),
+                                   Point_2(2.0, 2.0)};
+  std::vector<Point_2> pointsQ5 = {Point_2(0.0, 0.0), Point_2(1.0, 1.0),
+                                   Point_2(2.0, 2.0)};
+
+  // Run tests
+  std::cout << "Test Case 1: Simple Linear Curves" << std::endl;
+  testFDistance(pointsP1, pointsQ1);
+
+  std::cout << "\nTest Case 2: Complex Paths" << std::endl;
+  testFDistance(pointsP2, pointsQ2);
+
+  std::cout << "\nTest Case 3: Horizontal and Vertical Lines" << std::endl;
+  testFDistance(pointsP3, pointsQ3);
+
+  std::cout << "\nTest Case 4: Zigzag Patterns" << std::endl;
+  testFDistance(pointsP4, pointsQ4);
+
+  std::cout << "\nTest Case 5: Identical Curves" << std::endl;
+  testFDistance(pointsP5, pointsQ5);
 
   return 0;
 }

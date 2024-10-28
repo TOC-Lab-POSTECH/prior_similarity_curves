@@ -71,162 +71,98 @@ bool DecisionProblem::checkStartAndEndConditions() {
 
 // Function to check if a monotone curve exists
 bool DecisionProblem::checkIfMonotoneCurveExists() {
-  // Start the recursive process from (0, 0)
-  Point_2 startPoint(0, 0);
-
-  const PointPairVector& L = freeSpace.getL();
-  const PointPairVector& B = freeSpace.getB();
-
-  bool fromL = L[0].first == startPoint;
-  bool fromB = B[0].first == startPoint;
-
-  if (fromL && recursiveCheck(startPoint, true)) {
-    return true;
-  }
-  if (fromB && recursiveCheck(startPoint, false)) {
-    return true;
-  }
-
-  // No valid monotone curve found
-  return false;
-}
-
-bool DecisionProblem::recursiveCheck(const Point_2& currentPoint,
-                                     bool isFromL) {
   int p = P.numPoints();
   int q = Q.numPoints();
 
-  int i = static_cast<int>(currentPoint.y());
-  int j = static_cast<int>(currentPoint.x());
+  // Step 1: Initialize L_R and B_R
+  PointPairVector L_R((p - 1) * q, {Point_2(-1, -1), Point_2(-1, -1)});
+  PointPairVector B_R((q - 1) * p, {Point_2(-1, -1), Point_2(-1, -1)});
 
-  // Check if the current point is the endpoint (q-1, p-1)
-  if (currentPoint == Point_2(q - 1, p - 1)) {
-    return true;
+  // Set the initial elements based on L and B
+  for (int i = 0; i < p - 1; ++i) {
+    int index = i * q;
+    if (index < L_R.size()) {
+      L_R[index] = freeSpace.getL()[index];
+    }
   }
 
-  const PointPairVector& L = freeSpace.getL();
-  const PointPairVector& B = freeSpace.getB();
+  for (int j = 0; j < q - 1; ++j) {
+    int index = j * p;
+    if (index < B_R.size()) {
+      B_R[index] = freeSpace.getB()[index];
+    }
+  }
 
-  // Determine candidates based on whether the point is from L or B
-  if (isFromL) {  // Current point is from B
-    // First candidate: i * (q + 1) + j from L
-    int candidateIndex = i * (q + 1) + j;
-    if (candidateIndex >= 0 && candidateIndex < L.size()) {
-      const auto& candidate = L[candidateIndex];
-      if (candidate.first != Point_2(-1, -1)) {
-        if (candidate.second == Point_2(q - 1, p - 1)) return true;
+  // Step 2: Nested loop for processing L_R and B_R
+  for (int i = 0; i < p - 1; ++i) {
+    int l_base = i * q;
+    int b_base = i;
 
-        if (candidate.first == Point_2(j, i + 1) &&
-            L[i * q + j].second == Point_2(j, i + 1)) {
-          if (recursiveCheck(Point_2(j, i + 1), true)) return true;
+    for (int j = 0; j < q - 1; ++j) {
+      int l = l_base + j;
+      int b = b_base + j * p;
+
+      // Compare L_R[l], B_R[b], and L[l + 1]
+      const auto& point1 = L_R[l].first;
+      const auto& point2 = L_R[l].second;
+      const auto& point3 = B_R[b].first;
+      const auto& point4 = B_R[b].second;
+      const auto& point5 = freeSpace.getL()[l + 1].first;
+      const auto& point6 = freeSpace.getL()[l + 1].second;
+
+      // Task 1: Handling point3 from B_R
+      if (point3 != Point_2(-1, -1)) {
+        L_R[l + 1] = freeSpace.getL()[l + 1];
+      } else {
+        if (point1 == Point_2(-1, -1) || point5 == Point_2(-1, -1)) {
+          L_R[l + 1] = {Point_2(-1, -1), Point_2(-1, -1)};
+        } else {
+          double y_L = std::max(point1.y(), point5.y());
+          double y_U = std::min(point2.y(), point6.y());
+          if (y_L > y_U) {
+            L_R[l + 1] = {Point_2(-1, -1), Point_2(-1, -1)};
+          } else {
+            L_R[l + 1] = {Point_2(j, y_L), Point_2(j, y_U)};
+          }
+        }
+      }
+
+      // Compare B_R[b], L_R[b], and B[b + 1]
+      const auto& b_point1 = B_R[b].first;
+      const auto& b_point2 = B_R[b].second;
+      const auto& b_point3 = L_R[b].first;
+      const auto& b_point4 = L_R[b].second;
+      const auto& b_point5 = freeSpace.getB()[b + 1].first;
+      const auto& b_point6 = freeSpace.getB()[b + 1].second;
+
+      // Task 2: Handling point3 from L_R
+      if (b_point3 != Point_2(-1, -1)) {
+        B_R[b + 1] = freeSpace.getB()[b + 1];
+      } else {
+        if (b_point1 == Point_2(-1, -1) || b_point5 == Point_2(-1, -1)) {
+          B_R[b + 1] = {Point_2(-1, -1), Point_2(-1, -1)};
+        } else {
+          double x_L = std::max(b_point1.x(), b_point5.x());
+          double x_U = std::min(b_point2.x(), b_point6.x());
+          if (x_L > x_U) {
+            B_R[b + 1] = {Point_2(-1, -1), Point_2(-1, -1)};
+          } else {
+            B_R[b + 1] = {Point_2(x_L, j + 1), Point_2(x_U, j + 1)};
+          }
         }
       }
     }
+  }
 
-    // Second candidate: j * p + i from B
-    candidateIndex = j * p + i;
-    if (candidateIndex >= 0 && candidateIndex < B.size()) {
-      const auto& candidate = B[candidateIndex];
-      if (candidate.first != Point_2(-1, -1)) {
-        if (candidate.second == Point_2(q - 1, p - 1)) return true;
+  // Step 3: Check if a valid path exists
+  Point_2 start(0, 0);
+  Point_2 end(q - 1, p - 1);
 
-        if (candidate.first.y() >= currentPoint.y() &&
-            candidate.second.y() >= currentPoint.y() &&
-            candidate.first != candidate.second) {
-          if (recursiveCheck(candidate.second, false)) return true;
-        }
-      }
-    }
-
-    // Third candidate: j * p + i + 1 from B
-    candidateIndex = j * p + i + 1;
-    if (candidateIndex >= 0 && candidateIndex < B.size()) {
-      const auto& candidate = B[candidateIndex];
-      if (candidate.first != Point_2(-1, -1)) {
-        if (candidate.second == Point_2(q - 1, p - 1)) return true;
-
-        if (recursiveCheck(candidate.first, false)) return true;
-      }
-    }
-
-    // Fourth candidate: i * q + j + 1 from L
-    candidateIndex = i * q + j + 1;
-    if (candidateIndex >= 0 && candidateIndex < L.size()) {
-      const auto& candidate = L[candidateIndex];
-      if (candidate.first != Point_2(-1, -1)) {
-        if (candidate.second == Point_2(q - 1, p - 1)) return true;
-
-        if (candidate.first.x() >= currentPoint.x() &&
-            candidate.first.y() >= currentPoint.y() &&
-            candidate.second.x() >= currentPoint.x() &&
-            candidate.second.y() >= currentPoint.y()) {
-          if (recursiveCheck(candidate.first, true)) return true;
-        } else if (candidate.second.x() >= currentPoint.x() &&
-                   candidate.second.y() >= currentPoint.y()) {
-          if (recursiveCheck(candidate.second, true)) return true;
-        }
-      }
-    }
-
-  } else {  // Current point is from B
-    // First candidate: j * (p + 1) + i from B
-    int candidateIndex = j * (p + 1) + i;
-    if (candidateIndex >= 0 && candidateIndex < B.size()) {
-      const auto& candidate = B[candidateIndex];
-      if (candidate.first != Point_2(-1, -1)) {
-        if (candidate.second == Point_2(q - 1, p - 1)) return true;
-
-        if (candidate.first == Point_2(j + 1, i) &&
-            B[j * p + i].second == Point_2(j + 1, i)) {
-          if (recursiveCheck(Point_2(j + 1, i), false)) return true;
-        }
-      }
-    }
-
-    // Second candidate: i * q + j from L
-    candidateIndex = i * q + j;
-    if (candidateIndex >= 0 && candidateIndex < L.size()) {
-      const auto& candidate = L[candidateIndex];
-      if (candidate.first != Point_2(-1, -1)) {
-        if (candidate.second == Point_2(q - 1, p - 1)) return true;
-
-        if (candidate.first.x() >= currentPoint.x() &&
-            candidate.second.x() >= currentPoint.x() &&
-            candidate.first != candidate.second) {
-          if (recursiveCheck(candidate.second, true)) return true;
-        }
-      }
-    }
-
-    // Third candidate: i * q + j + 1 from L
-    candidateIndex = i * q + j + 1;
-    if (candidateIndex >= 0 && candidateIndex < L.size()) {
-      const auto& candidate = L[candidateIndex];
-      if (candidate.first != Point_2(-1, -1)) {
-        if (candidate.second == Point_2(q - 1, p - 1)) return true;
-
-        if (recursiveCheck(candidate.first, true)) return true;
-      }
-    }
-
-    // Fourth candidate: j * p + i + 1 from B
-    candidateIndex = j * p + i + 1;
-    if (candidateIndex >= 0 && candidateIndex < B.size()) {
-      const auto& candidate = B[candidateIndex];
-      if (candidate.first != Point_2(-1, -1)) {
-        if (candidate.second == Point_2(q - 1, p - 1)) return true;
-
-        if (candidate.first.x() >= currentPoint.x() &&
-            candidate.first.y() >= currentPoint.y() &&
-            candidate.second.x() >= currentPoint.x() &&
-            candidate.second.y() >= currentPoint.y()) {
-          if (recursiveCheck(candidate.first, false)) return true;
-        } else if (candidate.second.x() >= currentPoint.x() &&
-                   candidate.second.y() >= currentPoint.y()) {
-          if (recursiveCheck(candidate.second, false)) return true;
-        }
-      }
-    }
+  if ((L_R[0].first == start || L_R[0].second == start ||
+       B_R[0].first == start || B_R[0].second == start) &&
+      (L_R.back().first == end || L_R.back().second == end ||
+       B_R.back().first == end || B_R.back().second == end)) {
+    return true;
   }
 
   return false;
