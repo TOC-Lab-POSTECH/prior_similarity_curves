@@ -1,5 +1,7 @@
 #include "fdistance.h"
 
+using namespace std;
+
 // Constructor to initialize with two curves and set the F-distance
 FDistance::FDistance(const PolygonalCurve& P, const PolygonalCurve& Q)
     : P(P), Q(Q), criticalVal(P, Q), decision(P, Q, 0.0), fDistance(-1.0) {

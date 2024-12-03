@@ -6,10 +6,8 @@
 
 #include "polygonal_curve.h"
 
-using namespace std;
-
-typedef pair<Point_2, Point_2> PointPair;
-typedef vector<PointPair> PointPairVector;
+typedef std::pair<Point_2, Point_2> PointPair;
+typedef std::vector<PointPair> PointPairVector;
 class FreeSpace {
  public:
   // Constructor to initialize with two polygonal curves and an epsilon value
@@ -39,9 +37,8 @@ class FreeSpace {
 
   void processCurveForL();
   void processCurveForB();
-  pair<int, vector<float>> checkPointsOnEdge(const Point_2& start,
-                                             const Point_2& end,
-                                             const Point_2& point) const;
+  std::pair<int, std::vector<float>> checkPointsOnEdge(
+      const Point_2& start, const Point_2& end, const Point_2& point) const;
 };
 
 #endif  // FREE_SPACE_H
