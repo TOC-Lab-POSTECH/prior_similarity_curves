@@ -73,6 +73,7 @@ double computeCost(const PolygonalCurve& P, const PolygonalCurve& Q,
 
     double dx = P.getPoint(i).x() - Q.getPoint(j).x();
     double dy = P.getPoint(i).y() - Q.getPoint(j).y();
+
     cost += sqrt(dx * dx + dy * dy);
   }
 
@@ -133,13 +134,16 @@ CurveStringPair transformCurvesToStrings(const PolygonalCurve& P,
 // Computes the String Edit Distance (SED) for GED
 Matching SED(const CurveString& S, const CurveString& T, double threshold) {
   size_t n = S.size();
+  size_t m = T.size();
   int k = static_cast<int>(floor(threshold));
 
   // Step 1: Initialize the (n+1) by (n+1) DP table D
-  vector<vector<int>> D(n + 1, vector<int>(n + 1, -1));
+  vector<vector<int>> D(n + 1, vector<int>(m + 1, -1));
   for (size_t i = 0; i <= n; ++i) {
     D[i][0] = static_cast<int>(i);
-    D[0][i] = static_cast<int>(i);
+  }
+  for (size_t j = 0; j <= m; ++j) {
+    D[0][j] = static_cast<int>(j);
   }
 
   // Step 2: Initialize the vector L(that saves L values for each h and e) with
@@ -169,15 +173,15 @@ Matching SED(const CurveString& S, const CurveString& T, double threshold) {
       int r = max(L[(k + 1) + h - 1], L[(k + 1) + h + 1] + 1);
 
       // Slide
-      if (r >= 0 && r <= n && r + h >= 0 && r + h <= n) D[r][r + h] = e;
-      while (r + 1 > 0 && r + 1 <= n && r + h + 1 > 0 && r + h + 1 <= n &&
+      if (r >= 0 && r <= n && r + h >= 0 && r + h <= m) D[r][r + h] = e;
+      while (r + 1 > 0 && r + 1 <= n && r + h + 1 > 0 && r + h + 1 <= m &&
              (S[(r + 1) - 1] == T[(r + h + 1) - 1])) {
         D[r + 1][r + h + 1] = e;
         ++r;
       }
 
       // Set L_h,e
-      if (r > static_cast<int>(n) || r + h > static_cast<int>(n)) {
+      if (r > static_cast<int>(n) || r + h > static_cast<int>(m)) {
         L[(k + 1) + h] = numeric_limits<int>::max();  // Set to "infinity"
       } else {
         L[(k + 1) + h] = r;
@@ -186,7 +190,7 @@ Matching SED(const CurveString& S, const CurveString& T, double threshold) {
   }
 
   // Step 4: Check if the edit distance is within the threshold
-  if (D[n][n] == -1) {
+  if (D[n][m] == -1) {
     return {};  // Return empty matching
   }
 
@@ -197,7 +201,8 @@ Matching SED(const CurveString& S, const CurveString& T, double threshold) {
 // Backtrace the DP table and return matching
 Matching backtrace(const vector<vector<int>>& D) {
   size_t n = D.size() - 1;
-  size_t x = n, y = n;
+  size_t m = D[0].size() - 1;
+  size_t x = n, y = m;
 
   Matching M;  // Initialize an empty matching
 

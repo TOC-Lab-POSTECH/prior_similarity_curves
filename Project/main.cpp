@@ -29,7 +29,7 @@ void testFDistance(const std::vector<Point_2>& pointsP,
   // Output the computed F-distance
   double result = fDistance.getFDistance();
   if (result != -1.0) {
-    std::cout << "Computed Fréchet Distance: " << result << std::endl;
+    std::cout << "Fréchet Distance: " << result << std::endl;
   } else {
     std::cout << "No valid Fréchet distance found (f-distance = -1)."
               << std::endl;
@@ -44,7 +44,7 @@ void testGED(const vector<Point_2>& pointsP, const vector<Point_2>& pointsQ) {
   double gedValue = GED::computeSquareRootApproxGED(P, Q);
 
   // Print the result
-  cout << "Approximated GED: " << gedValue << endl;
+  cout << "Approximated(O(sqrt(n))) GED: " << gedValue << endl;
 }
 
 vector<Point_2> generateRandomPoints(size_t numPoints, double minCoord,
@@ -93,8 +93,16 @@ int main(int, char**) {
                               Point_2(2.0, 2.0)};
 
   // Test Case 6: Randomly generated complex point sequences
-  vector<Point_2> pointsP6 = generateRandomPoints(256, -2.0, 2.0);
-  vector<Point_2> pointsQ6 = generateRandomPoints(256, -2.0, 2.0);
+  vector<Point_2> pointsP6 = generateRandomPoints(1024, -2.0, 2.0);
+  vector<Point_2> pointsQ6 = generateRandomPoints(512, -2.0, 2.0);
+
+  // Test Case 7: Sequences with different lengths
+  vector<Point_2> pointsP7 = {Point_2(0.0, 0.0),  Point_2(1.0, 2.0),
+                              Point_2(2.0, 3.0),  Point_2(3.0, 4.0),
+                              Point_2(5.0, 7.0),  Point_2(7.0, 9.0),
+                              Point_2(10.0, 12.0)};
+  vector<Point_2> pointsQ7 = {Point_2(0.0, 0.0), Point_2(2.0, 1.0),
+                              Point_2(4.0, 3.0), Point_2(6.0, 5.0)};
 
   // Run tests
   cout << "Test Case 1: Simple Linear Curves" << endl;
@@ -120,6 +128,10 @@ int main(int, char**) {
   cout << "\nTest Case 6: Complex Random Sequences" << endl;
   testFDistance(pointsP6, pointsQ6);
   testGED(pointsP6, pointsQ6);
+
+  cout << "\nTest Case 7: Sequences with Different Lengths" << endl;
+  testFDistance(pointsP7, pointsQ7);
+  testGED(pointsP7, pointsQ7);
 
   return 0;
 }
