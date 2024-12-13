@@ -6,6 +6,8 @@
 #include <cmath>
 #include <iostream>
 
+using namespace std;
+
 // Constructor to initialize the polygonal curves P and Q
 CriticalValue::CriticalValue(const PolygonalCurve& P, const PolygonalCurve& Q)
     : P(P), Q(Q) {

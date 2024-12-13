@@ -9,6 +9,10 @@ using namespace std;
 PolygonalCurve::PolygonalCurve(const vector<Point_2>& points)
     : m_points(points) {}
 
+// Copy constructor: performs a deep copy
+PolygonalCurve::PolygonalCurve(const PolygonalCurve& P_)
+    : m_points(P_.m_points) {}
+
 // Adds a point to the polygonal curve
 void PolygonalCurve::addPoint(const Point_2& point) {
   m_points.push_back(point);
@@ -41,5 +45,37 @@ double PolygonalCurve::curveLength() const {
 void PolygonalCurve::printCurve() const {
   for (const auto& point : m_points) {
     cout << "(" << point.x() << ", " << point.y() << ")" << endl;
+  }
+}
+
+// Shifts the origin of the grid by subtracting the coordinates of newOrigin
+// from each point of the polygonal curve
+void PolygonalCurve::shiftOrigin(const Point_2& newOrigin) {
+  for (auto& point : m_points) {
+    double newX = point.x() - newOrigin.x();
+    double newY = point.y() - newOrigin.y();
+    point = Point_2(newX, newY);  // Update the point
+  }
+}
+
+// Scales the grid on which the points of the curve lie
+void PolygonalCurve::scaleGrid(double scalingFactor) {
+  if (scalingFactor == 0) {
+    throw invalid_argument("Scaling factor cannot be zero.");
+  }
+
+  for (auto& point : m_points) {
+    double scaledX = point.x() / scalingFactor;
+    double scaledY = point.y() / scalingFactor;
+    point = Point_2(scaledX, scaledY);  // Update the point
+  }
+}
+
+// Converts the coordinates of points to floor integer values
+void PolygonalCurve::floorCoordinates() {
+  for (auto& point : m_points) {
+    double flooredX = floor(point.x());
+    double flooredY = floor(point.y());
+    point = Point_2(flooredX, flooredY);  // Update the point
   }
 }

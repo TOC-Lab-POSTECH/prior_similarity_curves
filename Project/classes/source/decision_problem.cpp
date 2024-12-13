@@ -1,5 +1,7 @@
 #include "decision_problem.h"
 
+using namespace std;
+
 // Constructor to initialize with two curves and epsilon
 DecisionProblem::DecisionProblem(const PolygonalCurve& P,
                                  const PolygonalCurve& Q, double epsilon)
