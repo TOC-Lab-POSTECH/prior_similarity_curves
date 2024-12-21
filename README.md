@@ -1,5 +1,3 @@
-
-# Project_1: Clustering
 This repository contains an exact (continuous) Fréchet Distance (FD) algorithm and an approximation Geometric Edit Distance (GED) algorithm. Given two polygonal curves $P$ and $Q$ on the Euclidean plane, these algorithms return the similarity between $P$ and $Q$ based on FD and GED.
 
 Note that we implemented these algorithms to use them in the experiments for the main research and development of our project.
