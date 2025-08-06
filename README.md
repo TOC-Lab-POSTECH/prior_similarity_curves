@@ -11,7 +11,7 @@ Note that CGAL has the dependency on the boost library since it uses the boost g
 # Algorithms
 ## Fréchet Distance Algorithm
 The _Fréchet Distance_ (FD) is one of the most well-known similarity metrics between two (polygonal) curves. It is often described metaphorically as the minimum length of a leash required for a person to walk a dog along two separate paths, where the person walks along one curve and the dog along the other.
-Formally, The FD for two polygonal curves $P$ and $Q$ is defined as the infimum over all reparameterizations $\alpha$ and $\beta$ of $[0,1]$ of the maximum over all $t\in [0,1]$ of the distance between $P(\alpha(t)$ and $Q(\beta(t)$, i.e., $FD(P,Q)=\text{inf}_{\alpha, \beta}\text{max}_{t\in [0,1]}\{ d(P(\alpha(t)),Q(\beta(t)) \}$, where $d(\cdot, \cdot)$ is the distance function.
+Formally, The FD for two polygonal curves $P$ and $Q$ is defined as the infimum over all reparameterizations $\alpha$ and $\beta$ of $[0,1]$ of the maximum over all $t\in [0,1]$ of the distance between $P(\alpha(t)$ and $Q(\beta(t)$, i.e., $FD(P,Q)= inf_{\alpha, \beta} \max_{t\in [0,1]}\{ d(P(\alpha (t)),Q(\beta (t)) \}$, where $d(\cdot, \cdot)$ is the distance function.
 Our implementation is based on the work of [[Alt and Godau 95]](https://www.worldscientific.com/doi/abs/10.1142/S0218195995000064). In particular, we implement the non-parallel version of Alt and Godau's. We implement the decision version and the optimization version of the algorithm.
 
 
